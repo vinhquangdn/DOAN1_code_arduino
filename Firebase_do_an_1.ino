@@ -29,7 +29,7 @@ int btn_chuong = 33; //D2     //chân nút nhấn điều khiển bật tă
 int btn_chuong_val = 0;     //biến nhận giá trị digital từ btn 
 int count_btn_chuong = 0;     //biến đếm số lần nhấn btn chuông
 
-const int led_chuong = 32; //D13  //chân led  hiển thị việc bật tắt thiết bị cảnh báo
+const int led_tbbt = 32; //D13  //chân led  hiển thị việc bật tắt thiết bị cảnh báo
 const int led_warn = 25; //D14   //chân led cảnh báo
 
 
@@ -61,7 +61,7 @@ void setup()
   // Cau hinh chuong + led
   pinMode(btn_chuong,INPUT_PULLUP);
   pinMode(relay_chuong, OUTPUT);
-  pinMode(led_chuong,OUTPUT);
+  pinMode(led_tbbt,OUTPUT);
   pinMode(led_warn,OUTPUT);
 
   // Cau hinh cam bien 1
@@ -75,7 +75,7 @@ void setup()
 
   // Set outputs to LOW
   digitalWrite(relay_chuong, LOW);
-  digitalWrite(led_chuong, LOW);
+  digitalWrite(led_tbbt, LOW);
   digitalWrite(led_warn, LOW);
 
   digitalWrite(led_cb1, LOW);
@@ -103,18 +103,21 @@ void setup()
   //tiny, small, medium, large and unlimited.
   //Size and its write timeout e.g. tiny (1s), small (10s), medium (30s) and large (60s).
   Firebase.setwriteSizeLimit(fbdo, "tiny");
-  firebase_reset();
+  firebase_reset(); //set lai cac gia tri cua bien ve 0 tren firebase
 }
 
 //-------------------------------hàm chính để điều khiển mạch----------------------------------------------------------------------------------------
 void loop()
 {
-  set_biendem();
-  main_function();
-  firebase_tbbt();  //tbbt:thiet bi bao trom
-  firebase_cb2();
-  firebase_cb1();
+  set_biendem();      //thiet lap cac bien dem doc du lieu tu nut nhan va bien dem so lan nhan nut
+  main_function();  //ham chuc nang chinh cua he thong
+  firebase_tbbt();  //tbbt:thiet bi bao trom, cap nhat led chuong, btn chuong len firebase
+  firebase_canhbao(); //cap nhat trang thai led canh bao, chuong len firebase
+  firebase_cb2();     //cap nhat btn, gia tri cb2
+  firebase_cb1();     //cap nhat btn, gia tri cb1
 }
+
+
 
 void firebase_reset()
 {
@@ -146,13 +149,13 @@ void set_biendem()
 
   //------------------------------set biến đếm số lần nhấn nút----------------------------------------------------------------------------
   ///////////set biến đếm số lần bấm btn chuong
-    if (btn_chuong_val == 0) //khi nhan nut
+    if (btn_chuong_val == 0) //khi nhan nut gia tri la 0
       {
-        count_btn_chuong += 1;
+        count_btn_chuong += 1;  //biến đếm cộng 1 khi nhấn nút
       }
     else
       {
-        count_btn_chuong = count_btn_chuong;
+        count_btn_chuong = count_btn_chuong;  
       }
 
     ///////////set biến đếm số lần bấm btn cam bien 1
@@ -177,32 +180,31 @@ void set_biendem()
 
 //-------------------------------------điều khiển led 3 khối: chuong, cb1, cb2---------------------------------------------------------------
     //dieu khien den cua chuong)///////////////////////////////////////////////
-    if( (count_btn_chuong %2) == 1)
+    if( (count_btn_chuong %2) == 1)   //nếu biến đếm là số lẻ tức là khi nhấn nút
       {
         //setInt ham dua du lieu len firebase
-        digitalWrite(led_chuong,HIGH); 
+        digitalWrite(led_tbbt,HIGH);  //led báo hiệu thiết bị báo trộm (thiet bi canh bao) đang bật gồm chuông và led warn
         Serial.println("Thiet bi canh bao dang bat");
         delay(20);
       }
-    else
-      {
+    else   //nếu biến đếm là số chẵn
+      { 
         digitalWrite(relay_chuong,LOW);
-        digitalWrite(led_chuong,LOW); 
+        digitalWrite(led_tbbt,LOW); 
         Serial.println("Thiet bi canh bao dang tat");
         delay(20);
       }
 
     
-    //den cua cam bien 1///////////////////////////////////////////////////////
-    //cap nhat du lieu bien dem so lan nhan btn len firebase
+    //--------------------------------------------------den cua cam bien 1----------------------------------------------------------------------/
+    //hàm cập nhật giá trị của cảm biến 1 trên serial moitor
     if( (count_btn_cb1 %2) == 1)
       {    
-        digitalWrite(led_cb1,HIGH); 
+        digitalWrite(led_cb1,HIGH);  //led này dùng để báo hiệu là hệ thống đang nhận dữ liệu từ cảm biến 1
         Serial.print("Button cam bien 1 : ON ");
         Serial.print("      Gia tri cam bien 1 : ");
         Serial.println(cb1_val);   
         delay(20);
-        // Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_1/Btn_cb1", (count_btn_cb1 %2)); 
       } 
     else
       {   
@@ -235,15 +237,15 @@ void set_biendem()
 }
 
 void main_function()
-{                     //ham chinh thuc hien cac chuc nang cua he thong
-
-//----------------------dieu khien chuong + xet gia tri cam bien 1-------------------------------------------------------------
+{                     
+//----------------------ham chinh thuc hien cac chuc nang cua he thong----------------------------------------------------------------/
+//----------------------dieu khien chuong + xet gia tri cam bien 1--------------------------------------------------------------------/
     if((count_btn_chuong %2)==1) // khi thiet bi canh bao dang duoc bat
       {                               
-        // Truong hop nhan cam bien 1----------------------------------------------------------------------------------------------
-        if ( ((count_btn_cb1 %2)==1) && ((count_btn_cb2 %2)==0) )
+        // Truong hop nhan cam bien 1-------------------------------------------------------------------------------------------------/
+        if ( ((count_btn_cb1 %2)==1) && ((count_btn_cb2 %2)==0) ) //khi nhấn btn cb1 
           {            
-            if(cb1_val == 0)
+            if(cb1_val == 0)  //nếu giá trị cảm biến 1 là 0 tức là không có chuyển động
             {          
                 digitalWrite(relay_chuong,LOW); // chuong tat 
                 digitalWrite(led_warn,LOW);// den bao hieu tat                 
@@ -255,66 +257,80 @@ void main_function()
                 relay_chuong_val = digitalRead(relay_chuong);
                 if (relay_chuong_val == 1)
                 {
-                  for(int i = 0; i<1000;i++)                          
+                  firebase_canhbao();   //hàm này dùng để cập nhật dữ liệu led cảnh báo và chuông cảnh báo lên firebase
+                  for(int i = 0; i<50;i++)                          
                     {
                       digitalWrite(led_warn,HIGH);
-                      delay(20);
+                      delay(150);
                       digitalWrite(led_warn,LOW);
-                      delay(20);   
+                      delay(150);  
                     }            
                   
                 }
-                delay(100);
+                else
+                {
+                  firebase_canhbao();
+                }
+                delay(20);
                 
             }
           }   
           
-          //Khi nhan gia tri cam bien 2--------------------------------------------------------------------------------------------------------
-          else if (((count_btn_cb1%2)==0) && ((count_btn_cb2%2)==1))
+          //Khi nhan gia tri cam bien 2--------------------------------------------------------------------------------------------------------/
+          else if (((count_btn_cb1%2)==0) && ((count_btn_cb2%2)==1))  //khi nhấn btn cb2
           {
-            // khi ko co trom 
+            // khi ko cảm biến không cảm ứng được chuyển động nào
             if (cb2_val==0)
             {     
               digitalWrite (led_warn, LOW);
               digitalWrite (relay_chuong, LOW);    
               delay (10);
             }
-            //khi co trom
             else
             {         
                 digitalWrite(relay_chuong,HIGH);
                 relay_chuong_val = digitalRead(relay_chuong);         
                 if (relay_chuong_val ==1)
                 {
-                for(int i = 0; i<1000;i++)                          
-                    {
-                      digitalWrite(led_warn,HIGH);
-                      delay(20);
-                      digitalWrite(led_warn,LOW);
-                      delay(20);   
-                    }                        
+                  firebase_canhbao();
+                  for(int i = 0; i<50;i++)                          
+                      {
+                        digitalWrite(led_warn,HIGH);
+                        delay(150);
+                        digitalWrite(led_warn,LOW);
+                        delay(150);
+                      }                        
                 }
-                delay (100);       
+                else
+                {
+                  firebase_canhbao();
+                }
+                delay (20);       
             }
           }
-          //nhấn cả hai cảm biến ---------------------------------------------------------------------------------------------------------------
-        else if (((count_btn_cb1%2)==1) && ((count_btn_cb2%2)==1)) 
+          //nhấn cả hai cảm biến ---------------------------------------------------------------------------------------------------------------/
+        else if (((count_btn_cb1%2)==1) && ((count_btn_cb2%2)==1)) //khi nhấn btn cả hai cảm biến
           {
-            if ((cb1_val==1)||(cb2_val==1)) //neu 1 trong 2 cam bien nhan ra trom
+            if ((cb1_val==1)||(cb2_val==1)) //nếu 1 trong 2 cảm biến cảm ứng được chuyển động
             {   
-                digitalWrite(relay_chuong,HIGH);
+                digitalWrite(relay_chuong,HIGH);     // relay sẽ kích hoạt
                 relay_chuong_val = digitalRead(relay_chuong);
                 if (relay_chuong_val ==1)
                 {
-                  for(int i = 0; i<1000;i++)                          
+                  firebase_canhbao();
+                  for(int i = 0; i<50;i++)                          
                     {
                       digitalWrite(led_warn,HIGH);
-                      delay(20);
+                      delay(150);
                       digitalWrite(led_warn,LOW);
-                      delay(20);   
+                      delay(150);
                     }                        
-                }       
-                delay (100);     
+                }     
+                else
+                {
+                  firebase_canhbao();
+                }  
+                delay (20);     
             }
             else if (((cb1_val==0)||(cb2_val==0)))
             {              
@@ -342,44 +358,45 @@ void main_function()
 
 /*********************************************Firebase chuong, led cảnh báo*****************************************************/
 void firebase_tbbt()
-{
+{   //hàm này có vai trò lấy dữ liệu và cập nhật dữ liệu lên firebase
     FirebaseData count_btnchuong_fromfb;
-    Firebase.getString(count_btnchuong_fromfb, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt");
-    if(count_btnchuong_fromfb.dataType() == "int")
+    Firebase.getString(count_btnchuong_fromfb, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt"); //lấy chuỗi từ firebase thông qua biến Btn_tbbt
+    if(count_btnchuong_fromfb.dataType() == "int")   //nếu dữ liệu từ firebase là số nguyên tức là được cập nhật từ nút của mạch
       {
         if( (count_btn_chuong %2) == 1)
           {
-            Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 1); 
+            Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 1);  //hàm dùng để đưa số nguyên 1 lên firebase vào biến Btn_tbbt
             // delay(10);
           }
         else
           {
-            Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 0);
+            Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 0);  
             // delay(10);
           }
       }
-    if(count_btnchuong_fromfb.dataType() == "string")
+    if(count_btnchuong_fromfb.dataType() == "string")  //nếu dữ liệu từ firebase là chuỗi tức là được cập nhật từ web người dùng
       {
         //lay du lieu bien dem so lan nhan btn tu firebase xuong de dieu khien mach
 
-        FirebaseData count_btnchuong_fromfb;
-        Firebase.getString(count_btnchuong_fromfb, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt");
-        String rev_count_btnchuong = count_btnchuong_fromfb.stringData();
-        if(rev_count_btnchuong  == "1")
+        FirebaseData count_btnchuong_fromfb;   //biến thuộc kiểu dữ liệu của firebase
+        Firebase.getString(count_btnchuong_fromfb, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt"); //chuyển dữ liệu kiểu firebase thành chuỗi
+        String rev_count_btnchuong = count_btnchuong_fromfb.stringData();  //khai báo biến kiểu chuỗi để nhận dữ liệu đã được chuyển thành chuỗi từ firebase
+        if(rev_count_btnchuong  == "1")  //khi ấn nút trên giao diện web để bật led, lưu ý là lúc này led tắt (thiết bị cảnh báo tắt)
           {  
-            if(count_btn_chuong % 2 == 0)
+            //lệnh điều kiện dưới để đồng bộ dữ liệu khi điều khiển từ web và điều khiển từ mạch thực tế
+            if(count_btn_chuong % 2 == 0)  //nếu biến đếm là số chẵn tức là led hiện đang tắt khi nhấn nút từ web nó sẽ cộng lên 1
               {
-                count_btn_chuong = count_btn_chuong + 1; 
+                count_btn_chuong = count_btn_chuong + 1; //biến đếm cộng lên 1 để bật thiết bị cảnh báo
                 // delay(10); 
               }
-            else
+            else     //nếu biến đếm là số lẻ tức là led hiện đang bật khi nhấn nút từ web nó sẽ giữ nguyên và thiết bị cảnh báo vẫn bật         
               {
                 count_btn_chuong = count_btn_chuong ;  
                 // delay(10);
               } 
-            Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 1); 
+            Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 1); //lệnh cập nhật lại Btn_tbbt gửi lên firebase
           } 
-        else if(rev_count_btnchuong  == "0")
+        else if(rev_count_btnchuong  == "0")  //khi nhấn nút trên web để led tắt
           {   
             if(count_btn_chuong %2 == 1)
               {
@@ -394,24 +411,26 @@ void firebase_tbbt()
             Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Btn_tbbt", 0); 
           }   
       }
-        int led_chuong_tofb = digitalRead(led_chuong);   //tao bien dua du lieu led bao bat tat thiet bi len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Led_thiet_bi", led_chuong_tofb);
+        int led_tbbt_tofb = digitalRead(led_tbbt);   //tạo biến đọc giá trị từ led thiết bị báo trộm
+        Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Led_thiet_bi", led_tbbt_tofb); // gửi trạng thái led lên firebase
+}
+void firebase_canhbao()
+{   //hàm dùng để đưa trạng thái led cảnh báo và chuông lên firebase
+    int led_warn_tofb = digitalRead(relay_chuong);   //tao bien dua du lieu led canh bao len firebase
+    Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Led_canh_bao", led_warn_tofb);
 
-        int led_warn_tofb = digitalRead(relay_chuong);   //tao bien dua du lieu led canh bao len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Led_canh_bao", led_warn_tofb);
-
-        int alarm_tofb = digitalRead(relay_chuong);   //tao bien dua du lieu chuong len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Chuong_canh_bao", alarm_tofb);  
+    int alarm_tofb = digitalRead(relay_chuong);   //tao bien dua du lieu chuong len firebase
+    Firebase.setInt(fbdo, "/He_thong_chong_trom/Thiet_bi_bao_trom/Chuong_canh_bao", alarm_tofb);  
 }
 
 ////////////////////////////firebase cam bien 2//////////////////////////////////////////////////////////////////////
 void firebase_cb2()
 {
-    FirebaseData count_btn2_fromfb;
-    Firebase.getString(count_btn2_fromfb, "/He_thong_chong_trom/Phong_2/Btn_cb2");
-    if(count_btn2_fromfb.dataType() == "int")
+    FirebaseData count_btn2_fromfb;  //tạo biến lấy dữ liệu từ firebase
+    Firebase.getString(count_btn2_fromfb, "/He_thong_chong_trom/Phong_2/Btn_cb2"); //chuyển kiểu dữ liệu của biến thành chuỗi
+    if(count_btn2_fromfb.dataType() == "int")  //nếu kiểu dữ liệu biến là int tức điều khiển bằng mạch thực tế
       {
-        if( (count_btn_cb2 %2) == 1)
+        if( (count_btn_cb2 %2) == 1) //khi nhấn btn cb2
         {
             Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_2/Btn_cb2", 1);
             // delay(10);
@@ -422,13 +441,13 @@ void firebase_cb2()
             // delay(10);
         }
       }
-    if(count_btn2_fromfb.dataType() == "string")
+    if(count_btn2_fromfb.dataType() == "string")  //nếu kiểu dữ liệu biến là string tức điều khiển bằng web
       {
         //lay du lieu bien dem so lan nhan btn tu firebase xuong de dieu khien mach
-        String rev_count_btn2 = count_btn2_fromfb.stringData();
-        if(rev_count_btn2  == "1")
+        String rev_count_btn2 = count_btn2_fromfb.stringData(); 
+        if(rev_count_btn2  == "1")  //khi nhấn nút trên web để led sáng
           {    
-            if(count_btn_cb2 %2 == 0)
+            if(count_btn_cb2 %2 == 0) 
               {
                 count_btn_cb2 = count_btn_cb2 + 1;
                 // delay(10);
@@ -440,7 +459,7 @@ void firebase_cb2()
               }
             Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_2/Btn_cb2", 1);
           } 
-        else if(rev_count_btn2  == "0")
+        else if(rev_count_btn2  == "0")  //khi nhấn nút trên web để led tắt
           {   
             if(count_btn_cb2 %2 == 1)
               {
@@ -456,10 +475,10 @@ void firebase_cb2()
         }  
       }
         int cb2_val_tofb = cb2_val;   //tao bien dua du lieu cam bien len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_2/Cam_bien_2", cb2_val_tofb);
+        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_2/Cam_bien_2", cb2_val_tofb);  //đưa trạng thái cb2 lên firebase
           
         int led_cb2_tofb = digitalRead(led_cb2);   //tao bien dua du lieu led cam bien len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_2/Led_cam_bien_2", led_cb2_tofb);
+        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_2/Led_cam_bien_2", led_cb2_tofb);  //đưa trạng thái led_cb2 lên firebase
 }
 ////////////////////////////firebase cam bien 1//////////////////////////////////////////////////////////////////////
 void firebase_cb1()
@@ -514,10 +533,10 @@ void firebase_cb1()
         
       }
         int cb1_val_tofb = cb1_val;   //tao bien dua du lieu cam bien len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_1/Cam_bien_1", cb1_val_tofb);
+        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_1/Cam_bien_1", cb1_val_tofb); //đưa trạng thái cb1 lên firebase
           
         int led_cb1_tofb = digitalRead(led_cb1);   //tao bien dua du lieu led cam bien len firebase
-        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_1/Led_cam_bien_1", led_cb1_tofb);
+        Firebase.setInt(fbdo, "/He_thong_chong_trom/Phong_1/Led_cam_bien_1", led_cb1_tofb); //đưa trạng thái led_cb1 lên firebase
 }
         
   
