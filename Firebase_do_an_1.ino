@@ -7,14 +7,14 @@ FirebaseData fbdo;
 
 // #define WIFI_SSID "AndroidAP468B"
 // #define WIFI_PASSWORD "tandaptrai"
-// #define WIFI_SSID "Redmi Note 9S"
-// #define WIFI_PASSWORD "vinhquang123"
+#define WIFI_SSID "Redmi Note 9S"
+#define WIFI_PASSWORD "vinhquang123"
 //  #define WIFI_SSID "Tra sua boss"
 //  #define WIFI_PASSWORD "23456789"
 //  #define WIFI_SSID "Q.U.Y.N.H"
 //  #define WIFI_PASSWORD "TAKEITEASY"
- #define WIFI_SSID "DangSonVinh"
- #define WIFI_PASSWORD "27051962"
+//  #define WIFI_SSID "DangSonVinh"
+//  #define WIFI_PASSWORD "27051962"
 // #define WIFI_SSID "Fish Farm602"
 // #define WIFI_PASSWORD "anhphicubu"
 
@@ -25,29 +25,29 @@ WiFiServer server(80);
 int relay_chuong = 4;//D4    //chân relay nối với chuông
 int relay_chuong_val = 0;         //biến nhận giá trị digital từ relay_chuong 
 
-int btn_chuong = 33; //D2     //chân nút nhấn điều khiển bật tắt chuông
+int btn_chuong = 33; //D33     //chân nút nhấn điều khiển bật tắt chuông
 int btn_chuong_val = 0;     //biến nhận giá trị digital từ btn 
 int count_btn_chuong = 0;     //biến đếm số lần nhấn btn chuông
 
-const int led_tbbt = 32; //D13  //chân led  hiển thị việc bật tắt thiết bị cảnh báo
-const int led_warn = 25; //D14   //chân led cảnh báo
+const int led_tbbt = 32; //D32  //chân led  hiển thị việc bật tắt thiết bị cảnh báo
+const int led_warn = 25; //D25   //chân led cảnh báo
 
 
 //-----------------------thiết lập các chân và biến cho cảm biến 1 và btn điều khiển cb 1----------------------------------------------
-int cb1 = 2; //D25            //chân cảm biến 1
+int cb1 = 2; //D2            //chân cảm biến 1
 int cb1_val = 0;               //biến nhận giá trị digital từ cảm biến 1
 
-int btn_cb1 = 14; //D32        //chân btn điều khiển cảm biến 1
+int btn_cb1 = 14; //D14        //chân btn điều khiển cảm biến 1
 int btn_cb1_val = 0;          //biến nhận giá trị digital từ btn điều khiển cảm biến 1
 int count_btn_cb1 = 0;        //biến đếm số lần nhấn btn điều khiển cảm biến 1       
 
-int led_cb1 = 26; //D15        //chân led hiển thị việc nhận/ngắt dữ liệu cảm biến 1
+int led_cb1 = 26; //D26        //chân led hiển thị việc nhận/ngắt dữ liệu cảm biến 1
 
 //------------------------thiết lập các chân và biến cho cảm biến 2 và btn điều khiển cb 2----------------------------------------------
-int cb2 = 15; // D26           //chân cảm biến 2
+int cb2 = 15; // D15          //chân cảm biến 2
 int cb2_val = 0;               //biến nhận giá trị digital từ cảm biến 2
 
-int btn_cb2 = 13; //D33        //chân btn điều khiển cảm biến 2
+int btn_cb2 = 13; //D13       //chân btn điều khiển cảm biến 2
 int btn_cb2_val = 0;           //biến nhận giá trị digital từ cb2
 int count_btn_cb2 = 0;         //biến đếm số lần nhấn btn điều khiển cảm biến 2
 
